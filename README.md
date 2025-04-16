@@ -3,6 +3,8 @@ This is a school project of three engeeniring students Jean Caylus, Dina Gurnari
 It's a multiclass supervized vocalization. Samples are audio files (.wav) of differents size but single label.
 
 The project architecture is :
+
+```
 |___biodcase_development_set/
 
       |____train/
@@ -44,6 +46,7 @@ The project architecture is :
                   |____site-year2/
 
                   |____...
+```
 
 And the database can be download [here](https://zenodo.org/records/15092732/files/biodcase_development_set.zip?download=1) 
 

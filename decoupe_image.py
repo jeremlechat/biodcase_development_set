@@ -52,7 +52,7 @@ for filename, group in grouped:
             cropped = image.crop((start_px, 0, end_px, height))
 
             annotation_label = str(row['annotation']).replace(" ", "_")  # pour éviter les espaces
-            output_path = os.path.join(output_folder, f"{annotation_label}_{i}.jpg")
+            output_path = os.path.join(output_folder, f"{annotation_label}_{i}{loc}.jpg")
 
 
             cropped = image.crop((start_px, 0, end_px, height)).convert("RGB")

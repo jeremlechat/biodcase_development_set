@@ -1,46 +1,75 @@
 import os
+import time
 import numpy as np
 from PIL import Image
 from sklearn.preprocessing import LabelEncoder
-from xgboost import XGBClassifier
 from sklearn.model_selection import StratifiedKFold, cross_val_score
+from xgboost import XGBClassifier
 
-# 1) Chargement des images + labels
-DATA_DIR = "biodcase_development_set/train/imagettes/elephantisland2013/"
-X_list, y_list = [], []
+# === Paramètres ===
+DATA_DIR = "base_train"
+TARGET_SIZE = (128, 128)
+IMG_MODE = "L"
+IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png")
 
-for fname in os.listdir(DATA_DIR):
-    if not fname.lower().endswith(".jpg"):
-        continue
-    # on suppose "classe_idx.png"
-    classe = fname.split("_")[0]
-    img = Image.open(os.path.join(DATA_DIR, fname)).convert("L")
-    arr = np.array(img, dtype=np.float32).ravel()
-    X_list.append(arr)
-    y_list.append(classe)
+# === Chargement des données ===
+def load_flat_images(data_dir):
+    X_list, y_list = [], []
 
-X = np.vstack(X_list)      # shape = (n_samples, n_pixels)
-y = np.array(y_list)
+    files = [f for f in os.listdir(data_dir) if f.lower().endswith(IMAGE_EXTENSIONS)]
 
-# 2) Encodage des labels
-le     = LabelEncoder()
-y_enc  = le.fit_transform(y)
+    for i, fname in enumerate(files):
+        if "_" not in fname:
+            print(f"❌ Fichier ignoré (pas de `_`) : {fname}")
+            continue
 
-# 3) Définition du classifieur
+        label = fname.split("_")[0]
+        path = os.path.join(data_dir, fname)
+
+        try:
+            img = Image.open(path).convert(IMG_MODE).resize(TARGET_SIZE)
+            arr = np.array(img, dtype=np.float32).ravel()
+            X_list.append(arr)
+            y_list.append(label)
+
+            if i % 200 == 0:
+                print(f"📦 {i}/{len(files)} images traitées...")
+
+        except Exception as e:
+            print(f"Erreur sur {fname} : {e}")
+
+    X = np.vstack(X_list)
+    y = np.array(y_list)
+    return X, y
+
+print("📥 Chargement des images depuis :", DATA_DIR)
+X, y = load_flat_images(DATA_DIR)
+print(f"✅ {len(X)} images chargées avec {len(set(y))} classes.")
+
+# === Encodage des labels ===
+le = LabelEncoder()
+y_enc = le.fit_transform(y)
+print("🏷️ Labels encodés :", list(le.classes_))
+
+# === Modèle XGBoost ===
 clf = XGBClassifier(
     use_label_encoder=False,
     eval_metric="mlogloss",
     n_estimators=200,
     learning_rate=0.1,
     max_depth=5,
-    random_state=42
+    random_state=42,
+    verbosity=2  # affiche l'avancement de l'entraînement
 )
 
-# — Option A : entraînement direct sur tout le train
+# === Entraînement avec suivi de temps ===
+start = time.time()
 clf.fit(X, y_enc)
-print("Modèle entraîné sur tout le train.")
+print(f"⏱️ Entraînement terminé en {time.time() - start:.2f} secondes.")
 
-# — Option B : cross-validation sur le train pour avoir un score moyen
-kf     = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+# === Validation croisée (5 folds) ===
+kf = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+print("🔄 Lancement de la validation croisée...")
 scores = cross_val_score(clf, X, y_enc, cv=kf, scoring="accuracy", n_jobs=-1)
-print(f"CV accuracy : {scores.mean():.3f} ± {scores.std():.3f}")
+print(f"📈 Accuracy moyenne : {scores.mean():.3f} ± {scores.std():.3f}")
+

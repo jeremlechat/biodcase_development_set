@@ -1,6 +1,9 @@
 train/
 validation/
 
+antoine.py
+test.py
+
 .venv/
 requirements
 

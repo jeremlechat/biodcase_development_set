@@ -4,10 +4,10 @@ from PIL import Image
 import os
 
 # === CONFIGURATION ===
-T = 3600  # Durée en secondes
-input_csv = "./train/annotations/casey2014.csv"
-image_folder = "./train/spectres/casey2014"
-output_folder = "./casey2014/output"
+T = 300  # Durée en secondes
+input_csv = "./train/annotations/elephantisland2013.csv"
+image_folder = "./train/spectres/elephantisland2013"
+output_folder = "./output/elephantisland2013"
 
 os.makedirs(output_folder, exist_ok=True)
 
@@ -51,7 +51,9 @@ for filename, group in grouped:
 
             cropped = image.crop((start_px, 0, end_px, height))
 
-            output_path = os.path.join(output_folder, f"{filename}_crop_{i}.jpg")
+            annotation_label = str(row['annotation']).replace(" ", "_")  # pour éviter les espaces
+            output_path = os.path.join(output_folder, f"{annotation_label}__{i}.jpg")
+
 
             cropped = image.crop((start_px, 0, end_px, height)).convert("RGB")
 

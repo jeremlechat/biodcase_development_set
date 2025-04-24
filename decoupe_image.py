@@ -6,8 +6,8 @@ import os
 # === CONFIGURATION ===
 T = 300  # Durée en secondes
 input_csv = "./train/annotations/elephantisland2013.csv"
-image_folder = "./train/spectres/elephantisland2013"
-output_folder = "./output/elephantisland2013"
+image_folder = "./train/spectrogrammes/elephantisland2013"
+output_folder = "./train/imagettes/elephantisland2013"
 
 os.makedirs(output_folder, exist_ok=True)
 
